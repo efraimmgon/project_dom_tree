@@ -33,43 +33,43 @@ describe HTMLParser do
     end
   end
 
-  describe "#parser_script" do
+  describe "#parse_script" do
 
     it "parses a simple empty element" do
-      ds = parser.parser_script("<p></p>", nil)
+      ds = parser.parse_script("<p></p>")
       expect(parser.root).to eq(Node.new(0, :p, nil, {}, [""]))
     end
 
     it "parses a simple element with text" do
-      ds = parser.parser_script("<p>hello</p>", nil)
+      ds = parser.parse_script("<p>hello</p>")
       expect(parser.root).to eq(Node.new(0, :p, nil, {}, ["hello"]))
     end
 
     it "parses a element with attributes" do
-      ds = parser.parser_script("<p id='paragraph'>hello</p>", nil)
+      ds = parser.parse_script("<p id='paragraph'>hello</p>")
       expected = Node.new(0, :p, nil, {id: "paragraph"}, ["hello"])
       expect(parser.root).to eq(expected)
     end
 
     it "parses a nested element" do
-      ds = parser.parser_script("<p><span></span></p>", nil)
+      ds = parser.parse_script("<p><span></span></p>")
       child = Node.new(1, :span, 0, {}, [""])
       expected = Node.new(0, :p, nil, {}, [child])
       expect(parser.root).to eq(expected)
     end
 
     it "parses a nested element with text" do
-      ds = parser.parser_script("<p><span>in span</span></p>", nil)
+      ds = parser.parse_script("<p><span>in span</span></p>")
       child = Node.new(1, :span, 0, {}, ["in span"])
       expected = Node.new(0, :p, nil, {}, [child])
       expect(parser.root).to eq(expected)
     end
 
     it "works with spaced elts" do
-      parser.parser_script("<p>
+      parser.parse_script("<p>
           Before text <span>mid text (not included in text
           attribute of the paragraph tag)</span> after text.
-      </p>", nil)
+      </p>")
       expect(parser.root.id).to eq(0)
 
     end
@@ -78,7 +78,7 @@ describe HTMLParser do
   describe "#to_html" do
     it "returns the html_string" do
       html = "<p><span>in span</span></p>"
-      parser.parser_script(html, nil)
+      parser.parse_script(html)
       expect(parser.to_html).to eq(html)
     end
   end

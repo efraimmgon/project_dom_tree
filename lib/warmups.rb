@@ -45,26 +45,26 @@ class HTMLParser
     Node.new(length, type, id, attrs, [])
   end
 
-  def parser_script(html, parent)
+  def parse_script_(html, parent)
     if tag = opening_tag?(html)
       node = parse_tag(html, parent)
       @elts.push(node)
       @length += 1
       if parent.nil?
         @root = node
-        parser_script(tag.post_match, node)
+        parse_script_(tag.post_match, node)
       else
         parent.body.push(node)
-        parser_script(tag.post_match, node)
+        parse_script_(tag.post_match, node)
       end
     elsif tag = closing_tag?(html)
       if tag[1].to_sym == parent.type
         parent.body.push("") if parent.body.empty?
       end
-      parser_script(tag.post_match, elts[parent.parent]) if parent.parent
+      parse_script_(tag.post_match, elts[parent.parent]) if parent.parent
     elsif tag = text?(html)
       parent.body.push(tag.to_s)
-      parser_script(tag.post_match, parent)
+      parse_script_(tag.post_match, parent)
     elsif html.empty?
       return parent.body.push("") if parent.body.empty?
       parent
@@ -106,11 +106,11 @@ class HTMLParser
     html = File.readlines.reduce("") do |acc, line|
       acc += line
     end
-    parser_script(html, nil)
+    parse_script(html)
   end
 
   def parse_script(html)
-    parser_script(html, nil)
+    parse_script_(html, nil)
     self
   end
 
