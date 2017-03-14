@@ -29,11 +29,12 @@ describe HTMLParser do
 
     it "matches text" do
       tag = parser.parse_tag("hello world", nil)
-      expect(tag).to eq("hello world")
+      expect(tag).to eq(Node.new(0, :text, nil, {}, ["hello world"]))
     end
   end
 
   describe "#parse_script" do
+    let(:text){ text = Node.new(0, :text, nil, {}, ["hello world"])}
 
     it "parses a simple empty element" do
       ds = parser.parse_script("<p></p>")
@@ -41,13 +42,15 @@ describe HTMLParser do
     end
 
     it "parses a simple element with text" do
-      ds = parser.parse_script("<p>hello</p>")
-      expect(parser.root).to eq(Node.new(0, :p, nil, {}, ["hello"]))
+      ds = parser.parse_script("<p>hello world</p>")
+      text.id, text.parent = 1, 0
+      expect(parser.root).to eq(Node.new(0, :p, nil, {}, [text]))
     end
 
-    it "parses a element with attributes" do
-      ds = parser.parse_script("<p id='paragraph'>hello</p>")
-      expected = Node.new(0, :p, nil, {id: "paragraph"}, ["hello"])
+    it "parses an element with attributes" do
+      ds = parser.parse_script("<p id='paragraph'>hello world</p>")
+      text.id, text.parent = 1, 0
+      expected = Node.new(0, :p, nil, {id: "paragraph"}, [text])
       expect(parser.root).to eq(expected)
     end
 
@@ -59,8 +62,9 @@ describe HTMLParser do
     end
 
     it "parses a nested element with text" do
-      ds = parser.parse_script("<p><span>in span</span></p>")
-      child = Node.new(1, :span, 0, {}, ["in span"])
+      ds = parser.parse_script("<p><span>hello world</span></p>")
+      text.id, text.parent = 2, 1
+      child = Node.new(1, :span, 0, {}, [text])
       expected = Node.new(0, :p, nil, {}, [child])
       expect(parser.root).to eq(expected)
     end

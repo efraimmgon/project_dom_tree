@@ -36,8 +36,8 @@ class HTMLParser
   end
 
   def parse_tag(html, parent)
-    if !opening_tag?(html.strip) && text?(html)
-      return html
+    if elt = (!opening_tag?(html.strip) && text?(html))
+      return Node.new(length, :text, parent ? parent.id : nil, {}, [elt.to_s])
     end
     type = parse_elt(html)
     attrs = parse_attrs(html)
@@ -46,7 +46,7 @@ class HTMLParser
   end
 
   def parse_script_(html, parent)
-    if tag = opening_tag?(html)
+    if tag = (opening_tag?(html) or text?(html))
       node = parse_tag(html, parent)
       @elts.push(node)
       @length += 1
@@ -62,9 +62,6 @@ class HTMLParser
         parent.body.push("") if parent.body.empty?
       end
       parse_script_(tag.post_match, elts[parent.parent]) if parent.parent
-    elsif tag = text?(html)
-      parent.body.push(tag.to_s)
-      parse_script_(tag.post_match, parent)
     elsif html.empty?
       return parent.body.push("") if parent.body.empty?
       parent
@@ -88,8 +85,8 @@ class HTMLParser
     if tr.is_a?(Array)
       return "" if tr.empty?
       to_html_(tr.first) + to_html_(tr[1..-1])
-    elsif tr.is_a?(String)
-      tr
+    elsif tr.type == :text
+      tr.body.first
     else
       acc += "<#{tr.type}"
       acc += tr.attrs.empty? ? "" : tr.attrs.map{ |k, v| " #{k}='#{v}'" }.join
