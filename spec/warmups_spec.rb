@@ -2,7 +2,7 @@ require "warmups"
 
 describe HTMLParser do
   let(:parser){ HTMLParser.new }
-  let(:html){ "<p id='paragraph'><span>in span</span></p>" }
+  let(:html){ "<p id='paragraph'><span id='span2'>in span</span></p>" }
   let(:pop_parser){ parser.parse_script(html) }
 
   describe "#parse_tag" do
@@ -75,8 +75,8 @@ describe HTMLParser do
           attribute of the paragraph tag)</span> after text.
       </p>")
       expect(parser.root.id).to eq(0)
-
     end
+
   end
 
   describe "#to_html" do
@@ -90,21 +90,21 @@ describe HTMLParser do
   describe "#search_by" do
     it "returns the node with the equivalent attribute" do
       expected = pop_parser.root
-      expect(pop_parser.search_by(:id, "paragraph")).to eq(expected)
+      expect(pop_parser.search_by(:id, /^paragra../)).to eq(expected)
     end
   end
 
   describe "#search_children" do
     it "searchs only the children of the given node" do
-      result = pop_parser.search_children(pop_parser.root, :id, "paragraph")
-      expect(result).to eq(pop_parser.root)
+      result = pop_parser.search_children(pop_parser.root, :id, /^paragraph$/)
+      expect(result).to eq(nil)
     end
   end
 
   describe "#search_ancestors" do
     it "searchs the ancestors of the given node" do
-      result = pop_parser.search_ancestors(pop_parser.root, :id, "paragraph")
-      expect(result).to eq(nil)
+      result = pop_parser.search_ancestors(pop_parser.root.body.first, :id, /^paragraph$/)
+      expect(result).to eq(pop_parser.root)
     end
   end
 

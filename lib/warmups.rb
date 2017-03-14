@@ -36,11 +36,11 @@ class HTMLParser
   end
 
   def parse_tag(html, parent)
-    if elt = (!opening_tag?(html.strip) && text?(html))
+    if elt = (not(opening_tag?(html.strip)) && text?(html))
       return Node.new(length, :text, parent ? parent.id : nil, {}, [elt.to_s])
     end
     type = parse_elt(html)
-    attrs = parse_attrs(html)
+    attrs = parse_attrs(html.match(/<.+?>/).to_s)
     id = parent ? parent.id : nil
     Node.new(length, type, id, attrs, [])
   end
@@ -116,14 +116,13 @@ class HTMLParser
   # ------------------------------------------------------------------------
 
   def search_by_(tr, attr_name, attr_value)
-    return if tr.nil?
+    return if tr.nil? | tr.empty?
     elt, rest = tr.first, tr[1..-1]
-    if elt.is_a?(Node)
-      if elt.attrs[attr_name] == attr_value
-        return elt
-      end
+    if elt.attrs[attr_name] && elt.attrs[attr_name].match(attr_value)
+      return elt
     end
-    search_by(rest+elt.body, attr_name, attr_value)
+    return search_by_(rest, attr_name, attr_value) if elt.type == :text
+    search_by_(rest+elt.body, attr_name, attr_value)
   end
 
   def search_by(attr_name, attr_value)
@@ -131,18 +130,21 @@ class HTMLParser
   end
 
   def search_children(node, attr_name, attr_value)
-    search_by_([node], attr_name, attr_value)
+    search_by_(node.body, attr_name, attr_value)
   end
 
   def search_ancestors_(node, attr_name, attr_value)
     return if node.nil?
     elt, rest = node.first, node[1..-1]
     if elt.is_a?(Node)
-      if elt.attrs[attr_name] == attr_value
+      if elt.attrs[attr_name].match(attr_value)
         return elt
       end
     end
-    search_ancestors_(rest.push(elt.parent), attr_name, attr_value)
+    if elt.parent
+      parent = elts[elt.parent]
+      search_ancestors_(rest.push(parent), attr_name, attr_value)
+    end
   end
 
   def search_ancestors(node, attr_name, attr_value)
